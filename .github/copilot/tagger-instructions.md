@@ -237,7 +237,7 @@ grep -r "tags:.*aws" .
 
 ## Tag Vocabulary
 
-Maintain a controlled vocabulary in `/tags.yml`:
+Maintain a controlled vocabulary in `/TAGS.md`:
 
 ```yaml
 approved_tags:

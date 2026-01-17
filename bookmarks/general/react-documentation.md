@@ -31,6 +31,6 @@ react, javascript, frontend, documentation, web-development
 
 ## Related Resources
 
-- [React GitHub Repository](../../github-stars/react.md)
-- [JavaScript Cheatsheet](../../cheatsheets/javascript-cheatsheet.md)
-- [Frontend Development](../general/frontend-resources.md)
+- [React GitHub Repository](https://github.com/facebook/react)
+- JavaScript Cheatsheet
+- Frontend Development resources

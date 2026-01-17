@@ -129,29 +129,40 @@ jobs:
               # Sort by date added or title
               files.sort(key=lambda x: x['metadata'].get('date_added', ''))
               
-              # Generate index content (append to existing README)
+              # Generate index content (replace or add auto-generated section)
               if readme_path.exists():
                   with open(readme_path, 'r') as f:
                       existing = f.read()
                   
-                  # Check if we already have an auto-generated section
-                  if '## Auto-Generated Index' not in existing:
-                      with open(readme_path, 'a') as f:
-                          f.write('\n\n## Auto-Generated Index\n\n')
-                          f.write(f'*Last updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}*\n\n')
+                  # Remove any existing auto-generated section
+                  marker = '## Auto-Generated Index'
+                  index_pos = existing.find(marker)
+                  if index_pos != -1:
+                      base_content = existing[:index_pos].rstrip()
+                  else:
+                      base_content = existing.rstrip()
+                  
+                  with open(readme_path, 'w') as f:
+                      # Write the original content (without any previous auto-generated section)
+                      if base_content:
+                          f.write(base_content)
+                      
+                      # Append fresh auto-generated index
+                      f.write('\n\n## Auto-Generated Index\n\n')
+                      f.write(f'*Last updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}*\n\n')
+                      
+                      for file_info in files:
+                          meta = file_info['metadata']
+                          title = meta.get('title', file_info['path'].stem)
+                          category = meta.get('category', 'Uncategorized')
+                          tags = ', '.join(meta.get('tags', []))
                           
-                          for file_info in files:
-                              meta = file_info['metadata']
-                              title = meta.get('title', file_info['path'].stem)
-                              category = meta.get('category', 'Uncategorized')
-                              tags = ', '.join(meta.get('tags', []))
-                              
-                              # Build complete index entry
-                              entry = f"- [{title}]({file_info['path']}) - {category}"
-                              if tags:
-                                  entry += f" - Tags: {tags}"
-                              entry += '\n'
-                              f.write(entry)
+                          # Build complete index entry
+                          entry = f"- [{title}]({file_info['path']}) - {category}"
+                          if tags:
+                              entry += f" - Tags: {tags}"
+                          entry += '\n'
+                          f.write(entry)
           
           # Update indices for each main directory
           directories = ['bookmarks', 'github-stars', 'cheatsheets', 'tldr', 'favorites']

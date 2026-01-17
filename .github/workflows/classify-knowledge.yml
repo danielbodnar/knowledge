@@ -39,11 +39,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
       - name: Claude Code Action - Auto-classify
         uses: anthropics/claude-code-action@v1
         with:
@@ -54,7 +49,7 @@ jobs:
             
             For each new or modified file in bookmarks/, github-stars/, cheatsheets/, tldr/, or favorites/:
             1. Extract metadata (title, URL, topic, etc.)
-            2. Classify into appropriate category (Development/DevOps/Security/Design/Data/AI-ML/Cloud/Productivity/Learning/Reference)
+            2. Classify into appropriate category (Development/DevOps/Security/Design/Data/AI/ML/Cloud/Productivity/Learning/Reference)
             3. Generate relevant tags based on content
             4. Add or update frontmatter metadata
             5. Ensure consistent formatting

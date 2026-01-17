@@ -15,7 +15,7 @@ last_updated: ""
 
 ## Category
 
-[Primary category - Development/DevOps/Security/Design/Data/AI-ML/Cloud/Productivity/Learning/Reference]
+[Primary category - Development/DevOps/Security/Design/Data/AI/ML/Cloud/Productivity/Learning/Reference]
 
 ## Tags
 

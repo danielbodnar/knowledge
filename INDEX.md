@@ -128,7 +128,7 @@ Complete guide to the knowledge repository structure and automation.
 3. [.github/copilot/README.md](.github/copilot/README.md) - Use AI agents
 
 **Developer/Integrator**:
-1. [.github/workflows/](. github/workflows/) - Workflow files
+1. [.github/workflows/](.github/workflows/) - Workflow files
 2. [.github/copilot/](.github/copilot/) - Agent instructions
 3. [TAGS.md](TAGS.md) - Tag vocabulary for parsing
 

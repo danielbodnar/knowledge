@@ -31,5 +31,5 @@ docker, containers, devops, documentation, reference
 
 ## Related Resources
 
-- [Kubernetes Documentation](../../cheatsheets/kubernetes-cheatsheet.md)
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [Docker Cheatsheet](../../cheatsheets/docker-cheatsheet.md)

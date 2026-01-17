@@ -217,13 +217,13 @@ for repo in repos:
     name = repo['name']
     full_name = repo['full_name']
     desc = repo['description'] or 'No description'
-    url = repo['html_url']
+    repo_url = repo['html_url']
     stars = repo['stargazers_count']
     lang = repo['language'] or 'Unknown'
     
     content = f"""---
 repo_name: "{full_name}"
-repo_url: "{url}"
+repo_url: "{repo_url}"
 owner: "{repo['owner']['login']}"
 category: "Development"
 tags: [github, starred, {lang.lower() if lang != 'Unknown' else 'misc'}]
