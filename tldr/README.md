@@ -30,3 +30,8 @@ Each TLDR page is concise and action-oriented:
 ## Usage
 
 Find quick answers and get started quickly without reading lengthy documentation.
+
+## Auto-Generated Index
+
+*Last updated: 2026-01-17 23:09:29*
+

@@ -65,3 +65,10 @@ This directory contains browser bookmarks organized by source and category.
 Use the bookmark template from `/templates/bookmark-template.md` to add new bookmarks.
 
 Bookmarks are automatically categorized and organized by the AI classification system on each commit.
+
+## Auto-Generated Index
+
+*Last updated: 2026-01-17 23:09:29*
+
+- [Docker Documentation](general/docker-documentation.md) - DevOps - Tags: docker, containers, devops, documentation, reference
+- [React Official Documentation](general/react-documentation.md) - Development - Tags: react, javascript, frontend, documentation, web-development

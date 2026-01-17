@@ -30,3 +30,11 @@ Use the template from `/templates/cheatsheet-template.md` to create new cheatshe
 ## Contributing
 
 Cheatsheets are continuously updated and expanded. The AI classification system helps maintain consistency and organization.
+
+## Auto-Generated Index
+
+*Last updated: 2026-01-17 23:09:29*
+
+- [Python Quick Reference](python-cheatsheet.md) - Development - Tags: python, programming, cheatsheet, reference, syntax
+- [Docker Cheatsheet](docker-cheatsheet.md) - DevOps - Tags: docker, containers, cheatsheet, cli, reference
+- [Git Quick Reference](git-cheatsheet.md) - Development - Tags: git, version-control, cli, cheatsheet, reference

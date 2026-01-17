@@ -20,3 +20,8 @@ Content is organized by type and topic, with cross-references to related materia
 ## Adding Favorites
 
 Use the appropriate template from `/templates/` to add new favorites, or the AI classification system will help organize new additions automatically.
+
+## Auto-Generated Index
+
+*Last updated: 2026-01-17 23:09:29*
+
