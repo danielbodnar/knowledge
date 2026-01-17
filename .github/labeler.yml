@@ -1,0 +1,36 @@
+bookmarks:
+  - 'bookmarks/**/*'
+
+github-stars:
+  - 'github-stars/**/*'
+
+cheatsheets:
+  - 'cheatsheets/**/*'
+
+tldr:
+  - 'tldr/**/*'
+
+favorites:
+  - 'favorites/**/*'
+
+automation:
+  - '.github/**/*'
+
+documentation:
+  - '*.md'
+  - 'docs/**/*'
+
+python:
+  - '**/*.py'
+
+javascript:
+  - '**/*.js'
+  - '**/*.ts'
+
+docker:
+  - '**/Dockerfile'
+  - '**/*docker*.yml'
+
+kubernetes:
+  - '**/*k8s*.yml'
+  - '**/*kubernetes*.yml'
