@@ -123,7 +123,7 @@ jobs:
                                           'path': md_file.relative_to(directory),
                                           'metadata': metadata
                                       })
-                      except Exception as e:
+                      except (yaml.YAMLError, IOError, OSError) as e:
                           print(f"Error reading {md_file}: {e}")
               
               # Sort by date added or title
@@ -146,10 +146,12 @@ jobs:
                               category = meta.get('category', 'Uncategorized')
                               tags = ', '.join(meta.get('tags', []))
                               
-                              f.write(f"- [{title}]({file_info['path']}) - {category}")
+                              # Build complete index entry
+                              entry = f"- [{title}]({file_info['path']}) - {category}"
                               if tags:
-                                  f.write(f" - Tags: {tags}")
-                              f.write('\n')
+                                  entry += f" - Tags: {tags}"
+                              entry += '\n'
+                              f.write(entry)
           
           # Update indices for each main directory
           directories = ['bookmarks', 'github-stars', 'cheatsheets', 'tldr', 'favorites']

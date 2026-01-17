@@ -297,8 +297,10 @@ value = dictionary.setdefault("key", default_value)
 # Merge dictionaries (Python 3.9+)
 merged = dict1 | dict2
 
-# Remove duplicates
+# Remove duplicates (order not preserved)
 unique = list(set(my_list))
+# Or preserve order (Python 3.7+)
+unique_ordered = list(dict.fromkeys(my_list))
 
 # Flatten list
 flat = [item for sublist in nested_list for item in sublist]
