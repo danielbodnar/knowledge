@@ -1,0 +1,171 @@
+name: Auto-Label and Organize
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    name: Auto-label PRs and Issues
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Auto-label based on paths
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+          sync-labels: true
+      
+      - name: Label by content type
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            
+            const labels = new Set();
+            
+            files.forEach(file => {
+              const path = file.filename;
+              
+              // Add labels based on file paths
+              if (path.startsWith('bookmarks/')) labels.add('bookmarks');
+              if (path.startsWith('github-stars/')) labels.add('github-stars');
+              if (path.startsWith('cheatsheets/')) labels.add('cheatsheets');
+              if (path.startsWith('tldr/')) labels.add('tldr');
+              if (path.startsWith('favorites/')) labels.add('favorites');
+              if (path.startsWith('.github/workflows/')) labels.add('automation');
+              
+              // Add labels based on file content keywords
+              if (path.includes('docker')) labels.add('docker');
+              if (path.includes('kubernetes') || path.includes('k8s')) labels.add('kubernetes');
+              if (path.includes('python')) labels.add('python');
+              if (path.includes('javascript') || path.includes('js')) labels.add('javascript');
+              if (path.includes('security')) labels.add('security');
+            });
+            
+            if (labels.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: Array.from(labels)
+              });
+            }
+
+  reorganize-content:
+    runs-on: ubuntu-latest
+    name: Reorganize Content
+    needs: auto-label
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml requests
+      
+      - name: Generate indices
+        run: |
+          python - <<'EOF'
+          import os
+          import yaml
+          from pathlib import Path
+          from datetime import datetime
+          
+          def update_index(directory, category_name):
+              """Update README.md index for a directory"""
+              readme_path = Path(directory) / "README.md"
+              
+              # Collect all markdown files
+              files = []
+              for md_file in Path(directory).rglob("*.md"):
+                  if md_file.name != "README.md":
+                      # Try to read frontmatter
+                      try:
+                          with open(md_file, 'r') as f:
+                              content = f.read()
+                              if content.startswith('---'):
+                                  parts = content.split('---', 2)
+                                  if len(parts) >= 3:
+                                      metadata = yaml.safe_load(parts[1])
+                                      files.append({
+                                          'path': md_file.relative_to(directory),
+                                          'metadata': metadata
+                                      })
+                      except Exception as e:
+                          print(f"Error reading {md_file}: {e}")
+              
+              # Sort by date added or title
+              files.sort(key=lambda x: x['metadata'].get('date_added', ''))
+              
+              # Generate index content (append to existing README)
+              if readme_path.exists():
+                  with open(readme_path, 'r') as f:
+                      existing = f.read()
+                  
+                  # Check if we already have an auto-generated section
+                  if '## Auto-Generated Index' not in existing:
+                      with open(readme_path, 'a') as f:
+                          f.write('\n\n## Auto-Generated Index\n\n')
+                          f.write(f'*Last updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}*\n\n')
+                          
+                          for file_info in files:
+                              meta = file_info['metadata']
+                              title = meta.get('title', file_info['path'].stem)
+                              category = meta.get('category', 'Uncategorized')
+                              tags = ', '.join(meta.get('tags', []))
+                              
+                              f.write(f"- [{title}]({file_info['path']}) - {category}")
+                              if tags:
+                                  f.write(f" - Tags: {tags}")
+                              f.write('\n')
+          
+          # Update indices for each main directory
+          directories = ['bookmarks', 'github-stars', 'cheatsheets', 'tldr', 'favorites']
+          for dir_name in directories:
+              dir_path = Path(dir_name)
+              if dir_path.exists():
+                  print(f"Updating index for {dir_name}")
+                  update_index(dir_path, dir_name)
+          
+          print("Index generation complete")
+          EOF
+      
+      - name: Commit index updates
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git diff --staged --quiet || git commit -m "📚 Update knowledge indices [skip ci]"
+          git push

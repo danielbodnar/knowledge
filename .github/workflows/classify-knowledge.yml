@@ -1,0 +1,78 @@
+name: AI-Powered Knowledge Classification
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'bookmarks/**'
+      - 'github-stars/**'
+      - 'cheatsheets/**'
+      - 'tldr/**'
+      - 'favorites/**'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'bookmarks/**'
+      - 'github-stars/**'
+      - 'cheatsheets/**'
+      - 'tldr/**'
+      - 'favorites/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  classify-and-organize:
+    runs-on: ubuntu-latest
+    name: Classify and Organize Knowledge
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Claude Code Action - Auto-classify
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Analyze the recently added or modified files in the knowledge repository.
+            
+            For each new or modified file in bookmarks/, github-stars/, cheatsheets/, tldr/, or favorites/:
+            1. Extract metadata (title, URL, topic, etc.)
+            2. Classify into appropriate category (Development/DevOps/Security/Design/Data/AI-ML/Cloud/Productivity/Learning/Reference)
+            3. Generate relevant tags based on content
+            4. Add or update frontmatter metadata
+            5. Ensure consistent formatting
+            6. Move files to appropriate subdirectories if needed
+            7. Update index files (README.md) in each category
+            
+            Maintain the existing directory structure and follow the templates in /templates/.
+            
+            Be conservative - only modify files that need classification or organization.
+            Preserve all existing content and only enhance metadata and organization.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      
+      - name: Commit classification changes
+        if: github.event_name == 'push'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git diff --staged --quiet || git commit -m "🤖 Auto-classify and organize knowledge [skip ci]"
+          git push
