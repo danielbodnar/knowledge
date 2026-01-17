@@ -1,0 +1,192 @@
+name: Sync GitHub Stars
+
+on:
+  # Run daily at midnight UTC
+  schedule:
+    - cron: '0 0 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      full_sync:
+        description: 'Perform full sync (re-categorize all stars)'
+        required: false
+        default: 'false'
+        type: boolean
+      dry_run:
+        description: 'Dry run (no commits)'
+        required: false
+        default: 'false'
+        type: boolean
+
+  # Interactive triggers for @claude mentions
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned, labeled]
+
+# Ensure only one sync runs at a time
+concurrency:
+  group: sync-stars
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Job for scheduled/manual sync
+  sync-stars:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      FULL_SYNC: ${{ inputs.full_sync }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create data directory
+        run: mkdir -p data stars
+
+      - name: Fetch GitHub Stars
+        id: fetch-stars
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching starred repositories..."
+
+          # Fetch all starred repos with pagination
+          gh api graphql --paginate -f query='
+            query($endCursor: String) {
+              viewer {
+                starredRepositories(first: 100, after: $endCursor, orderBy: {field: STARRED_AT, direction: DESC}) {
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
+                  edges {
+                    starredAt
+                    node {
+                      nameWithOwner
+                      description
+                      url
+                      primaryLanguage {
+                        name
+                      }
+                      repositoryTopics(first: 10) {
+                        nodes {
+                          topic {
+                            name
+                          }
+                        }
+                      }
+                      stargazerCount
+                      forkCount
+                      isArchived
+                      updatedAt
+                      licenseInfo {
+                        spdxId
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ' --jq '.data.viewer.starredRepositories.edges' > data/stars-raw.json
+
+          # Count stars
+          STAR_COUNT=$(jq 'length' data/stars-raw.json)
+          echo "star_count=$STAR_COUNT" >> "$GITHUB_OUTPUT"
+          echo "Fetched $STAR_COUNT starred repositories"
+
+      - name: Organize Stars with Claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          STAR_COUNT: ${{ steps.fetch-stars.outputs.star_count }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            TASK: Organize GitHub Stars
+
+            I've fetched starred repositories from GitHub.
+            The raw data is in `data/stars-raw.json`.
+
+            Please:
+            1. Read the raw stars data from `data/stars-raw.json`
+            2. Analyze and categorize the repositories into logical categories based on:
+               - Primary language
+               - Repository topics
+               - Description keywords
+               - Common use cases (e.g., CLI tools, libraries, frameworks, learning resources)
+            3. Create/update `stars/README.md` with:
+               - A summary of total stars and categories
+               - A table of contents linking to category files
+               - Statistics (languages, most starred, recently updated)
+            4. Create/update category files in `stars/` directory (e.g., `stars/typescript.md`, `stars/rust.md`, `stars/devtools.md`)
+            5. Update `data/stars.json` with the organized, structured data including categories
+
+            Use these category guidelines:
+            - Languages: Group by primary programming language when significant
+            - Tools: CLI tools, DevOps, productivity tools
+            - Libraries: Reusable code libraries and SDKs
+            - Frameworks: Web frameworks, app frameworks
+            - Learning: Tutorials, awesome lists, documentation
+            - Infrastructure: Containers, orchestration, cloud
+            - AI/ML: Machine learning, AI tools, LLMs
+            - Security: Security tools, authentication
+            - Data: Databases, data processing, analytics
+
+            Format each category file with:
+            - Repository name with link
+            - Description
+            - Stars count
+            - Primary language
+            - Last updated date
+            - Topics/tags
+          claude_args: |
+            --max-turns 20
+            --allowedTools Bash,Read,Write,Edit,Glob,Grep
+
+      - name: Commit changes
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run mode - skipping commit"
+            git status
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            COMMIT_DATE=$(date -u +%Y-%m-%d)
+            git commit -m "chore: sync github stars [$COMMIT_DATE]"
+            git push
+          fi
+
+  # Job for interactive @claude mentions
+  claude-interactive:
+    if: |
+      github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request_review_comment' ||
+      github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Claude Assistant
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude"
+          claude_args: |
+            --max-turns 15
+            --allowedTools Bash,Read,Write,Edit,Glob,Grep
