@@ -96,7 +96,7 @@ jobs:
                 }
               }
             }
-          ' --jq '.data.viewer.starredRepositories.edges' > data/stars-raw.json
+          ' --jq '.data.viewer.starredRepositories.edges' | jq -s 'add' > data/stars-raw.json
 
           # Count stars
           STAR_COUNT=$(jq 'length' data/stars-raw.json)
