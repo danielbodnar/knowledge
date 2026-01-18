@@ -89,14 +89,15 @@ Stars are synced automatically every day at midnight UTC.
 
 #### Interactive Commands
 
-Mention `@claude` in any issue or PR comment:
+Mention `@claude` in any issue or PR comment to discuss or query your starred repositories:
 
 ```
 @claude What TypeScript CLI tools have I starred?
 @claude Find stars related to Kubernetes
 @claude Show statistics for my starred repos
-@claude Sync my stars now
 ```
+
+Note: To trigger a sync, use the Manual or Scheduled workflow options in the Actions tab.
 
 ## 🤖 Automated Classification
 
