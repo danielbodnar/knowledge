@@ -25,7 +25,7 @@ Go to Actions → Sync GitHub Stars → Run workflow
 Runs automatically every day at midnight UTC
 
 ### Interactive
-Comment `@claude sync stars` on any issue to trigger a sync
+Comment `@claude` on any issue to discuss or refine categories for your starred repositories. This does not trigger the sync workflow; use the Manual or Scheduled options above for syncing.
 
 ## Categories
 
