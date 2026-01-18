@@ -24,8 +24,6 @@ on:
     types: [created]
   pull_request_review_comment:
     types: [created]
-  issues:
-    types: [opened, assigned, labeled]
 
 # Ensure only one sync runs at a time
 concurrency:
@@ -43,7 +41,6 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      FULL_SYNC: ${{ inputs.full_sync }}
       DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout repository
@@ -175,8 +172,7 @@ jobs:
   claude-interactive:
     if: |
       github.event_name == 'issue_comment' ||
-      github.event_name == 'pull_request_review_comment' ||
-      github.event_name == 'issues'
+      github.event_name == 'pull_request_review_comment'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
